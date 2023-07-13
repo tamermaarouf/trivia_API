@@ -94,6 +94,23 @@ def create_app(test_config=None):
     This removal will persist in the database and when you refresh the page.
     """
 
+    @app.route('/questions/<int:questions_id', methods=['DELETE'])
+    def delete_questions(questions_id):
+        try:
+            question = Question.query.filter(Question.id==questions_id)
+
+            if question is None:
+                abort(404)
+
+            question.delete()
+
+            return jsonify({
+                "success": True,
+                "deleted": questions_id
+                })
+        except Exception as e:
+            abort(422)
+
     """
     @TODO:
     Create an endpoint to POST a new question,
@@ -125,7 +142,7 @@ def create_app(test_config=None):
     category to be shown.
     """
     @app.route('/categories/<int:category_id>/questions')
-    def getByCategory(id):
+    def getByCategory(category_id):
         selection = Question.query.filter(Question.category==category_id)
         totalQuestions = len(Question.query.all())
         current_questions = paginate_questions(request, selection)
@@ -155,6 +172,30 @@ def create_app(test_config=None):
     Create error handlers for all expected errors
     including 404 and 422.
     """
+    @app.errorhandler(404)
+    def not_found(error):
+        return (
+            jsonify({"success": False, "error": 404, "message": "resource not found"}),
+            404,
+        )
+
+    @app.errorhandler(422)
+    def unprocessable(error):
+        return (
+            jsonify({"success": False, "error": 422, "message": "unprocessable"}),
+            422,
+        )
+
+    @app.errorhandler(400)
+    def bad_request(error):
+        return jsonify({"success": False, "error": 400, "message": "bad request"}), 400
+
+    @app.errorhandler(405)
+    def not_found(error):
+        return (
+            jsonify({"success": False, "error": 405, "message": "method not allowed"}),
+            405,
+        )
 
 
     return app
