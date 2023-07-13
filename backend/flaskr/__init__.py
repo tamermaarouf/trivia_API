@@ -18,12 +18,6 @@ def paginate_questions(request, selection):
 
     return current_questions
 
-def paginate_categories():
-    selection = Category.query.order_by(Category.id).all()
-    categories = [category.format() for category in selection]
-
-    return categories
-
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
@@ -42,12 +36,8 @@ def create_app(test_config=None):
     # CORS Headers
     @app.after_request
     def after_request(response):
-        response.headers.add(
-            "Access-Control-Allow-Headers", "Content-Type,Authorization,true"
-        )
-        response.headers.add(
-            "Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS"
-        )
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization,true")
+        response.headers.add("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS")
         return response
 
     """
@@ -55,13 +45,17 @@ def create_app(test_config=None):
     Create an endpoint to handle GET requests
     for all available categories.
     """
-
+    @app.route('/')
     @app.route('/categories')
     def retrieve_categories():
+        categories = Category.query.order_by(Category.type).all()
+
+        if len(categories) == 0:
+            abort(404)
 
         return jsonify({
             "success": True,
-            "categories": paginate_categories(),
+            'categories': {category.id: category.type for category in categories}
             })
 
 
@@ -82,13 +76,14 @@ def create_app(test_config=None):
     def retrieve_questions():
         selection = Question.query.order_by(Question.id).all()
         current_questions = paginate_questions(request, selection)
+        categories = Category.query.order_by(Category.type).all()
 
         return jsonify({
             "success": True,
             "questions": current_questions,
-            "totalQuestions": len(Question.query.all()),
-            "categories": paginate_categories(),
-            "currentCategory":"History"
+            "total_questions": len(selection),
+            "categories": {category.id: category.type for category in categories},
+            "currentCategory": None
             })
 
     """
@@ -129,6 +124,19 @@ def create_app(test_config=None):
     categories in the left column will cause only questions of that
     category to be shown.
     """
+    @app.route('/categories/<int:category_id>/questions')
+    def getByCategory(id):
+        selection = Question.query.filter(Question.category==category_id)
+        totalQuestions = len(Question.query.all())
+        current_questions = paginate_questions(request, selection)
+
+        return jsonify({
+            "success": True,
+            "questions": current_questions,
+            "total_questions": totalQuestions,
+            "current_category": "History"
+            })
+
 
     """
     @TODO:
@@ -147,6 +155,7 @@ def create_app(test_config=None):
     Create error handlers for all expected errors
     including 404 and 422.
     """
+
 
     return app
 
