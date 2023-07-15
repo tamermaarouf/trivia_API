@@ -74,38 +74,18 @@ def create_app(test_config=None):
     """
 
     @app.route('/questions', methods=['GET', 'POST'])
-    def retrieve_add_questions():
-        if request.method == 'POST':
-            body = request.get_json()            
-            # print(body)
-            new_question = body.get("question", None)
-            new_answer = body.get("answer", None)
-            new_category = body.get("category", None)
-            new_difficulty = body.get("difficulty", None)
+    def retrieve_questions():
+        selection = Question.query.order_by(Question.id).all()
+        current_questions = paginate_questions(request, selection)
+        categories = Category.query.order_by(Category.type).all()
 
-            try:
-                question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
-                question.insert()
-
-                return jsonify({
-                    "success": True,
-                    "questions_id": question.id
-                    })
-            except Exception as e:
-                abort(422)
-
-        else:            
-            selection = Question.query.order_by(Question.id).all()
-            current_questions = paginate_questions(request, selection)
-            categories = Category.query.order_by(Category.type).all()
-
-            return jsonify({
-                "success": True,
-                "questions": current_questions,
-                "total_questions": len(selection),
-                "categories": {category.id: category.type for category in categories},
-                "currentCategory": None
-                })
+        return jsonify({
+            "success": True,
+            "questions": current_questions,
+            "total_questions": len(selection),
+            "categories": {category.id: category.type for category in categories},
+            "currentCategory": None
+            })
 
     """
     @TODO:
@@ -142,6 +122,27 @@ def create_app(test_config=None):
     the form will clear and the question will appear at the end of the last page
     of the questions list in the "List" tab.
     """
+
+    @app.route('/questions', methods=['GET', 'POST'])
+    def add_questions():
+        if request.method == 'POST':
+            body = request.get_json()            
+            # print(body)
+            new_question = body.get("question", None)
+            new_answer = body.get("answer", None)
+            new_category = body.get("category", None)
+            new_difficulty = body.get("difficulty", None)
+
+            try:
+                question = Question(question=new_question, answer=new_answer, category=new_category, difficulty=new_difficulty)
+                question.insert()
+
+                return jsonify({
+                    "success": True,
+                    "questions_id": question.id
+                    })
+            except Exception as e:
+                abort(422) 
 
     
 
