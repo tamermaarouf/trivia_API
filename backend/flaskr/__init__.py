@@ -204,6 +204,7 @@ def create_app(test_config=None):
     @app.route('/categories/<int:category_id>/questions', methods=['GET'])
     def getByCategory(category_id):
         selection = Question.query.filter(Question.category==category_id).all()
+        category = Category.query.get(category_id)
 
         totalQuestions = len(selection)
         current_questions = paginate_questions(request, selection)
@@ -212,7 +213,7 @@ def create_app(test_config=None):
             "success": True,
             "questions": current_questions,
             "total_questions": totalQuestions,
-            "current_category": None
+            "current_category": category.type
             })
 
 
