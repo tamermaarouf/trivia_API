@@ -18,7 +18,13 @@ def setup_db(app, database_path=database_path):
     db.app = app
     db.init_app(app)
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception as e:
+            print("got the following exception when attempting db.create_all() in __init__.py: " + str(e))
+        finally:
+            print("db.create_all() in __init__.py was successfull - no exceptions were raised")
+            # from .models import users
 
 """
 Question
